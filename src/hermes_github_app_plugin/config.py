@@ -39,8 +39,20 @@ class GitHubAppConfig:
 
 
 def hermes_home() -> Path:
-    """Return the configured Hermes home directory."""
-    return Path(os.environ.get("HERMES_HOME", str(Path.home() / ".hermes"))).expanduser()
+    """Return the configured Hermes home directory.
+
+    Prefer ``hermes_constants.get_hermes_home()`` so the profile-scoped home
+    (the contextvar override installed by the multiplex gateway's
+    ``_profile_runtime_scope``) is honored when this code runs inside a Hermes
+    process. Falls back to the ``HERMES_HOME`` env var / platform default when
+    the ``hermes_constants`` module is unavailable (e.g. the standalone CLI,
+    which is launched outside the Hermes source tree).
+    """
+    try:
+        from hermes_constants import get_hermes_home
+        return get_hermes_home()
+    except ImportError:
+        return Path(os.environ.get("HERMES_HOME", str(Path.home() / ".hermes"))).expanduser()
 
 
 def config_path() -> Path:
